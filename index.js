@@ -281,7 +281,7 @@ async function run() {
         })
         app.post('/blog', verifyToken, async (req, res) => {
             const data = req.body;
-            console.log(req.decodedUserEmail);
+            console.log(data);
             try {
                 if (data?.user === req?.decodedUserEmail) {
                     const createBlog = new blog(data.mainData);
@@ -373,7 +373,7 @@ async function run() {
             try {
                 if (id) {
                     const thatBlog = await blog.findById(id);
-                    const res = await thatBlog.love.push(data)
+                    const update = await thatBlog.love.push(data)
                     const rs = await thatBlog.save()
                     res.json({ success: 'successfully saved' });
                 }
@@ -467,7 +467,7 @@ async function run() {
             try {
                 const { file } = req?.files;
 
-                // console.log(file, 'get the fiel', uuid());
+                console.log(file, 'get the fiel', uuid());
                 if (file) {
 
                     await cloudinary.uploader.upload(file.tempFilePath,
@@ -498,9 +498,9 @@ async function run() {
         app.post('/sendMail', async (req, res) => {
 
             try {
-                const { user_name, user_email, profession, review } = req.body;
+                const { user_name, user_email, profession, review, subject, } = req.body;
                 console.log({ user_name, user_email, profession, review });
-                const subject = `${user_name} ${profession} has send a review `
+                const createSubject = subject || `${user_name} ${profession} has send a review `
                 // create reusable transporter object using the default SMTP transport
                 const transport = await nodemailer.createTransport({
                     service: 'gmail',
@@ -513,7 +513,7 @@ async function run() {
                 const mailOptions = {
                     from: user_email,
                     to: 'naimurrhman53@gmail.com',
-                    subject: subject,
+                    subject: createSubject,
                     text: review
                 }
                 await transport.sendMail(mailOptions, function (error, response) {
