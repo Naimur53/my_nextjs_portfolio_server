@@ -4,7 +4,8 @@ const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
-
+const admin = require("firebase-admin");
+const serviceAccount = require('./serviceAccount.json')
 // schema
 const bestProjects = require('./Model/bestProjects')
 const review = require('./Model/review')
@@ -26,6 +27,26 @@ app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: '/tmp/'
 }));
+
+// firebase admin init
+
+// const serviceAccount = {
+//     type: process.env.type,
+//     project_id: process.env.project_id,
+//     private_key_id: process.env.private_key_id,
+//     private_key: process.env.private_key,
+//     client_email: process.env.client_email,
+//     client_id: process.env.client_id,
+//     auth_uri: process.env.auth_uri,
+//     token_uri: process.env.token_uri,
+//     auth_provider_x509_cert_url: process.env.auth_provider_x509_cert_url,
+//     client_x509_cert_url: process.env.client_x509_cert_url,
+// };
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
 // middle war
 async function verifyToken(req, res, next) {
     if (req.headers.authorization?.startsWith('Bearer ')) {
@@ -416,7 +437,7 @@ async function run() {
             res.json({ user: allUser })
 
         })
-        app.get('/totalCategories', async (req, res) => {
+        app.get('/totalShowcase', async (req, res) => {
             const allCategories = await showcase.count();
             res.json({ categories: allCategories })
 
@@ -493,6 +514,29 @@ async function run() {
                 console.log(e)
                 res.status(400).json({ error: 'could not upload image' })
             }
+        })
+
+        app.post('/video', async (req, res) => {
+            console.log('the file', req.files.video);
+            const file = req.files?.video;
+            let url;
+            if (file) {
+
+                await cloudinary.uploader.upload(file.tempFilePath,
+                    {
+                        resource_type: "video", public_id: "myfolder/mysubfolder/" + file.name.split('.')[0],
+                        overwrite: true,
+                    },
+                    function (error, result) {
+                        if (result) {
+                            url = result.url
+                        }
+                        console.log(result, error)
+                    });
+            }
+
+
+            res.json({ url })
         })
 
         app.post('/sendMail', async (req, res) => {

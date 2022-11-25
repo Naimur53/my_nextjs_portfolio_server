@@ -26,6 +26,7 @@ const bestProjects = new mongoose.Schema({
         type: String,
         required: true,
     },
+    detailId: String,
     technology: [{ type: String }],
 
 })

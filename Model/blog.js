@@ -24,6 +24,9 @@ const sectionSchema = new mongoose.Schema({
     },
     img: [imgSchema],
     video: '',
+    column: Boolean,
+    reverse: Boolean,
+
 })
 
 const commentSchema = new mongoose.Schema({
