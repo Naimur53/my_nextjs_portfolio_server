@@ -33,7 +33,7 @@ const commentSchema = new mongoose.Schema({
     user: userSchema,
     time: {
         type: Date,
-        default: new Date(),
+        default: () => new Date(),
     },
     comment: String
 
@@ -43,8 +43,7 @@ const blogSchema = new mongoose.Schema({
     img: String,
     date: {
         type: Date,
-        default: new Date(),
-
+        default: () => new Date(),
     },
     heading: String,
     description: String,

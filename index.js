@@ -5,7 +5,6 @@ const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary').v2;
 const mongoose = require('mongoose');
 const admin = require("firebase-admin");
-const serviceAccount = require('./serviceAccount.json')
 // schema
 const bestProjects = require('./Model/bestProjects')
 const review = require('./Model/review')
@@ -30,19 +29,19 @@ app.use(fileUpload({
 
 // firebase admin init
 
-// const serviceAccount = {
-//     type: process.env.type,
-//     project_id: process.env.project_id,
-//     private_key_id: process.env.private_key_id,
-//     private_key: process.env.private_key,
-//     client_email: process.env.client_email,
-//     client_id: process.env.client_id,
-//     auth_uri: process.env.auth_uri,
-//     token_uri: process.env.token_uri,
-//     auth_provider_x509_cert_url: process.env.auth_provider_x509_cert_url,
-//     client_x509_cert_url: process.env.client_x509_cert_url,
-// };
-
+const serviceAccount = {
+    type: process.env.type,
+    project_id: process.env.project_id,
+    private_key_id: process.env.private_key_id,
+    private_key: process.env.private_key,
+    client_email: process.env.client_email,
+    client_id: process.env.client_id,
+    auth_uri: process.env.auth_uri,
+    token_uri: process.env.token_uri,
+    auth_provider_x509_cert_url: process.env.auth_provider_x509_cert_url,
+    client_x509_cert_url: process.env.client_x509_cert_url,
+};
+console.log(serviceAccount)
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -351,13 +350,31 @@ async function run() {
                     const thatBlog = await blog.findById(id);
                     const response = await thatBlog.comments.push(req.body)
                     const rs = await thatBlog.save()
-                    res.json({ result: 'success' });
+                    res.json(rs);
                 }
             } catch (e) {
                 console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
+        });
+        app.put('/blog/deleteComment', async (req, res) => {
+            // const result = await categories.create(req.body)
+            const { id, commentId } = req.query;
+            console.log({ id, commentId });
+            try {
+                if (id && commentId) {
+                    const thatBlog = await blog.findById(id);
+                    const response = thatBlog.comments.pull({ _id: commentId })
+                    const rs = await thatBlog.save()
+                    res.json(rs);
+                } else {
+                    res.status(400).json({ error: 'something bd' })
+                }
+            } catch (e) {
+                console.log(e);
+                res.status(400).json({ error: 'something bd' })
+            }
 
         });
 
@@ -447,7 +464,7 @@ async function run() {
             const result = await blog.aggregate([
                 {
                     "$project":
-                        { comment: { $size: "$comments" }, love: { $size: "$love" }, date: 1 }
+                        { comment: { $size: "$comments" }, love: { $size: "$love" }, date: '$date' }
                 },
                 { $sort: { _id: -1 } },
                 { $limit: 7 }
