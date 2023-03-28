@@ -41,7 +41,6 @@ const serviceAccount = {
     auth_provider_x509_cert_url: process.env.auth_provider_x509_cert_url,
     client_x509_cert_url: process.env.client_x509_cert_url,
 };
-console.log(serviceAccount)
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -54,7 +53,6 @@ async function verifyToken(req, res, next) {
         try {
             const decodedUser = await admin.auth().verifyIdToken(idToken)
 
-            console.log(decodedUser.email, 'hears');
             req.decodedUserEmail = decodedUser.email
         }
         catch (e) {
@@ -76,8 +74,8 @@ cloudinary.config({
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.icikx.mongodb.net/my_next_js_server?retryWrites=true&w=majority`;
 // const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.connect(uri, () => {
-    console.log('connect', uri)
-}, e => console.log(e))
+    // console.log('connect', uri)
+}, e => { })
 const uuid = function () {
     // Math.random should be unique because of its seeding algorithm.
     // Convert it to base 36 (numbers + letters), and grab the first 9 characters
@@ -96,11 +94,9 @@ async function run() {
 
         app.get('/user', async (req, res) => {
             const { email } = req.query;
-            console.log(email, 'iddd');
             try {
                 if (email) {
                     const result = await user.findOne({ email });
-                    console.log(result);
                     res.json(result);
                 }
                 else {
@@ -108,7 +104,6 @@ async function run() {
                     res.json(allUser)
                 }
             } catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
@@ -118,12 +113,11 @@ async function run() {
         app.put('/user', async (req, res) => {
             try {
                 const data = req.body;
-                console.log(data);
                 const filter = { email: data.email };
                 const options = { upsert: true }
                 const updateDoc = { $set: data }
                 const result = await user.updateOne(filter, updateDoc, options);
-                console.log(result);
+
                 res.json(result);
             }
             catch {
@@ -133,13 +127,10 @@ async function run() {
         })
         app.get('/bestprojects', async (req, res) => {
             const result = await bestProjects.find({});
-            console.log(result);
             res.json(result)
         })
         app.post('/bestprojects', async (req, res) => {
-            console.log('adding', req.body);
             const result = await bestProjects.create(req.body);
-            console.log(result);
             res.json(result)
         })
         app.put('/bestprojects/:id', async (req, res) => {
@@ -148,18 +139,14 @@ async function run() {
             const doc = { $set: req.body }
             const options = { upsert: true };
             const result = await bestProjects.findByIdAndUpdate(id, doc, options);
-            console.log(result);
             res.json(result)
 
         })
         app.delete('/bestprojects/:id', async (req, res) => {
-            console.log(req.body);
-            console.log(req.params.id);
             const id = req.params.id;
             try {
 
                 const result = await bestProjects.findByIdAndDelete(id);
-                console.log(result);
                 res.json(result)
             } catch (err) {
                 res.status(400).json({ error: 'bad req' })
@@ -187,7 +174,6 @@ async function run() {
                 const doc = { $set: { show: value } }
                 const options = { upsert: true };
                 const result = await review.findByIdAndUpdate(id, doc, options);
-                console.log(result, id)
                 res.json(result)
             }
             catch (err) {
@@ -199,7 +185,6 @@ async function run() {
             try {
 
                 const result = await review.findByIdAndDelete(id);
-                console.log(result, id)
                 res.json(result)
             }
             catch (err) {
@@ -210,14 +195,12 @@ async function run() {
         app.get('/allShowcase', async (req, res) => {
 
             const result = await showcase.find({});
-            console.log(result);
             res.json(result)
         })
         app.post('/addShowcase', async (req, res) => {
             try {
 
                 const result = await showcase.create(req.body);
-                console.log(result);
                 res.json(result)
             } catch (err) {
                 res.status(400).json({ error: 'bad req' })
@@ -243,7 +226,6 @@ async function run() {
             try {
 
                 const { id, short } = req.query
-                console.log(id);
                 let result;
                 if (id) {
 
@@ -269,7 +251,6 @@ async function run() {
                 res.json(result);
             }
             catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'bad req' })
             }
         })
@@ -295,13 +276,11 @@ async function run() {
                 res.json(result);
             }
             catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'bad req' })
             }
         })
         app.post('/blog', verifyToken, async (req, res) => {
             const data = req.body;
-            console.log(data);
             try {
                 if (data?.user === req?.decodedUserEmail) {
                     const createBlog = new blog(data.mainData);
@@ -311,7 +290,6 @@ async function run() {
                     res.status(400).json({ error: 'UnAuthorize' })
                 }
             } catch (e) {
-                console.log(e, 'eeror');
                 res.status(400).json({ error: 'bad req' })
             }
 
@@ -319,22 +297,19 @@ async function run() {
         app.put('/blog', verifyToken, async (req, res) => {
             const data = req.body;
             const { id } = req.query
-            console.log(id, data.sections);
 
-            console.log();
             try {
                 if (data?.user === req?.decodedUserEmail) {
                     // const createBlog = new blog(data.mainData);
                     // const result = await createBlog.save();
 
                     const result = await blog.findByIdAndUpdate(id, data.mainData);
-                    console.log(result);
+
                     res.json(result);
                 } else {
                     res.status(400).json({ error: 'UnAuthorize' })
                 }
             } catch (e) {
-                console.log(e, 'eeror');
                 res.status(400).json({ error: 'bad req' })
             }
 
@@ -343,7 +318,6 @@ async function run() {
         app.put('/blog/comment', async (req, res) => {
             // const result = await categories.create(req.body)
             const { id } = req.query;
-            console.log(req.body);
             let result;
             try {
                 if (id) {
@@ -353,7 +327,6 @@ async function run() {
                     res.json(rs);
                 }
             } catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
@@ -361,7 +334,6 @@ async function run() {
         app.put('/blog/deleteComment', async (req, res) => {
             // const result = await categories.create(req.body)
             const { id, commentId } = req.query;
-            console.log({ id, commentId });
             try {
                 if (id && commentId) {
                     const thatBlog = await blog.findById(id);
@@ -372,7 +344,6 @@ async function run() {
                     res.status(400).json({ error: 'something bd' })
                 }
             } catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
@@ -398,7 +369,6 @@ async function run() {
                 res.json(result);
             }
             catch (e) {
-                console.log(e);
                 res.status(400).json({ error: e.message })
             }
         })
@@ -416,7 +386,6 @@ async function run() {
                     res.json({ success: 'successfully saved' });
                 }
             } catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
@@ -426,13 +395,10 @@ async function run() {
         app.delete('/blog/delete', verifyToken, async (req, res) => {
             const { id } = req.query;
             const data = req.body;
-            console.log(data.user, req?.decodedUserEmail);
             try {
                 if (data?.user === req?.decodedUserEmail) {
                     if (id) {
                         const result = await blog.findByIdAndDelete(id);
-                        // console.log(result);
-                        console.log('delete');
                         res.json(result);
                     } else {
                         res.status(400).json({ error: 'something bad' })
@@ -442,7 +408,6 @@ async function run() {
                     res.status(400).json({ error: 'UnAuthorize' })
                 }
             } catch (e) {
-                console.log(e);
                 res.status(400).json({ error: 'something bd' })
             }
 
@@ -493,7 +458,6 @@ async function run() {
                 res.json({ blog: result });
             }
             catch (e) {
-                console.log(e);
                 res.status(400).json({ error: e.message })
             }
         })
@@ -505,7 +469,6 @@ async function run() {
             try {
                 const { file } = req?.files;
 
-                console.log(file, 'get the fiel', uuid());
                 if (file) {
 
                     await cloudinary.uploader.upload(file.tempFilePath,
@@ -523,18 +486,15 @@ async function run() {
 
 
                             }
-                            console.log({ result, error })
                         });
                 }
             }
             catch (e) {
-                console.log(e)
                 res.status(400).json({ error: 'could not upload image' })
             }
         })
 
         app.post('/video', async (req, res) => {
-            console.log('the file', req.files.video);
             const file = req.files?.video;
             let url;
             if (file) {
@@ -548,7 +508,6 @@ async function run() {
                         if (result) {
                             url = result.url
                         }
-                        console.log(result, error)
                     });
             }
 
@@ -560,7 +519,6 @@ async function run() {
 
             try {
                 const { user_name, user_email, profession, review, subject, } = req.body;
-                console.log({ user_name, user_email, profession, review });
                 const createSubject = subject || `${user_name} ${profession} has send a review `
                 // create reusable transporter object using the default SMTP transport
                 const transport = await nodemailer.createTransport({
@@ -575,7 +533,10 @@ async function run() {
                     from: user_email,
                     to: 'naimurrhman53@gmail.com',
                     subject: createSubject,
-                    text: review
+                    text: review + ` 
+                    From ${user_email}`,
+                    replyTo: user_email,
+
                 }
                 await transport.sendMail(mailOptions, function (error, response) {
                     if (error) {
@@ -583,12 +544,12 @@ async function run() {
                         res.status(400).json({ res: 'error' })
                     } else {
                         res.send("Email has been sent successfully");
-                        console.log('mail sent');
                         res.json({ res: 'success' })
                     }
                 })
+                console.log("done sending", mailOptions);
             } catch (err) {
-
+                console.log(err)
                 res.status(400).json({ res: 'error' })
             }
 
